@@ -1,40 +1,34 @@
 #! /usr/bin/env python
 
-import math
+from aoc.intcode import IntCodeRunner
 
 
-def run_opcodes(values, n=12, v=2):
-    ip = 0
+def get_program_output(program, n=None, v=None):
+    program = [int(i) for i in program.split(",")]
+    if n is not None:
+        program[1] = n
+    if v is not None:
+        program[2] = v
 
-    values[1] = n
-    values[2] = v
+    icr = IntCodeRunner(program)
+    return icr.run()
 
-    while True:
-        op = values[ip]
-        if op == 1:
-            values[values[ip + 3]] = values[values[ip + 1]] + values[values[ip + 2]]
-            ip += 4
-        elif op == 2:
-            values[values[ip + 3]] = values[values[ip + 1]] * values[values[ip + 2]]
-            ip += 4
-        elif op == 99:
-            return values[0]
+
+def get_input_for_output(program, expected_output):
+    for n in range(100):
+        for v in range(100):
+            if get_program_output(program, n, v) == expected_output:
+                return 100 * n + v
+
+    raise Exception("Expected output not found")
 
 
 def main():
     with open("input/d02.txt") as f:
-        values = [int(i) for i in f.read().split(",")]
+        program = f.read()
 
-    print(f"Part 1: {run_opcodes(values[:])}")
-
-    input2 = 19690720
-    for n in range(100):
-        for v in range(100):
-            if run_opcodes(values[:], n, v) == input2:
-                pt2 = 100 * n + v
-                break
-
-    print(f"Part 2: {pt2}")
+    print(f"Part 1: {get_program_output(program, 12, 2)}")
+    print(f"Part 2: {get_input_for_output(program, 19690720)}")
 
 
 if __name__ == "__main__":

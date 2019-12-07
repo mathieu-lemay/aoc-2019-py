@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-import unittest
-
 
 def is_valid(digits):
     return digits == sorted(digits) and any(digits.count(i) > 1 for i in set(digits))
