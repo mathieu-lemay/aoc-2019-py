@@ -26,7 +26,7 @@ def get_orbits(input_):
     return sum(len(list_parents(m, k)) for k in m.keys())
 
 
-def get_orbits2(input_):
+def get_number_of_transfers(input_):
     m = {}
     for i in input_:
         x, y = i.split(")")
@@ -47,32 +47,11 @@ def main():
         x = [i.strip() for i in f.readlines()]
 
     print(f"Part 1: {get_orbits(x)}")
-    print(f"Part 1: {get_orbits2(x)}")
-
-
-class Tests(unittest.TestCase):
-    def test_p1(self):
-        in_ = """COM)B,B)C,C)D,D)E,E)F,B)G,G)H,D)I,E)J,J)K,K)L"""
-        in_ = in_.split(",")
-        self.assertEqual(42, get_orbits(in_))
-
-    def test_p2(self):
-        in_ = """COM)B,B)C,C)D,D)E,E)F,B)G,G)H,D)I,E)J,J)K,K)L,K)YOU,I)SAN"""
-
-        in_ = in_.split(",")
-        self.assertEqual(4, get_orbits2(in_))
-
-
-def tests():
-    suite = unittest.makeSuite(Tests)
-    unittest.TextTestRunner().run(suite)
-    print("\n----------------------------------------------------------------------\n")
+    print(f"Part 1: {get_number_of_transfers(x)}")
 
 
 if __name__ == "__main__":
     from time import time as ts
-
-    tests()
 
     _t = ts()
     main()

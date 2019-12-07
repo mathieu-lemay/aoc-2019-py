@@ -1,9 +1,9 @@
 from unittest import TestCase
 
-from d03 import WireTracer
+from aoc.d03 import WireTracer
 
 
-class D01Test(TestCase):
+class D03Test(TestCase):
     def test_get_closest_distance(self):
         params = (
             ("R8,U5,L5,D3", "U7,R6,D4,L4", 6),

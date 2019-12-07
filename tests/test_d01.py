@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from d01 import get_fuel_req, get_fuel_req_recur
+from aoc.d01 import get_fuel_req, get_fuel_req_recur
 
 
 class D01Test(TestCase):
