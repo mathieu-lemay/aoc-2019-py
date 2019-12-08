@@ -1,3 +1,6 @@
 .idea
 *.py[co]
 __pycache__
+
+.coverage
+.make.*
