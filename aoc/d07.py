@@ -48,7 +48,7 @@ def get_thruster_output_with_feedback(program, phase_settings):
         except Exception as e:
             print(e)
         else:
-            if (cr % nb_runners) == nb_runners - 1:
+            if all(r.is_halted() for r in runners):
                 return runner.pop_outputs()[0]
 
         outputs = runner.pop_outputs()

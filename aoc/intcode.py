@@ -72,6 +72,9 @@ class IntCodeCPU:
                 dbgprint(self._intcodes)
                 raise ValueError(f"Unsupported op: {op}")
 
+    def is_halted(self):
+        return self._halted
+
     def _get_operation(self):
         op = self._intcodes[self._ip]
         opcode = op % 100
