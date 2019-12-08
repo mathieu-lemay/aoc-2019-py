@@ -49,7 +49,7 @@ class IntCodeCPUTest(TestCase):
         cpu = IntCodeCPU(program)
         cpu.run()
 
-        self.assertEqual([42], cpu.pop_outputs())
+        self.assertEqual([42], cpu.pop_output())
 
     def test_bne_jump(self):
         program = [5, 0, 4, 42, 7, 0, 0, 99]

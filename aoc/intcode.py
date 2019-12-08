@@ -33,15 +33,15 @@ class IntCodeCPU:
             self._intcodes = program
         self._id = id_
 
-        self._inputs = []
-        self._outputs = []
+        self._input = []
+        self._output = []
 
         self._ip = 0
         self._modes = iter([])
         self._halted = False
 
-    def run(self, inputs=None):
-        self._inputs = iter(inputs or [])
+    def run(self, input_=None):
+        self._input = iter(input_ or [])
 
         while not self._halted:
             op, modes = self._get_operation()
@@ -115,7 +115,7 @@ class IntCodeCPU:
         (out,) = self._get_op_params(1)
         dbgprint(f", out={out}")
 
-        v = next(self._inputs, None)
+        v = next(self._input, None)
         if v is None:
             raise WaitingOnInput()
 
@@ -128,7 +128,7 @@ class IntCodeCPU:
         dbgprint(f", p={p}")
 
         v = self._ld(p, next(self._modes, 0))
-        self._outputs.append(v)
+        self._output.append(v)
 
         self._ip += 2
 
@@ -192,10 +192,10 @@ class IntCodeCPU:
     def poke(self, idx):
         return self._intcodes[idx]
 
-    def pop_outputs(self):
-        outputs = self._outputs
-        self._outputs = []
-        return outputs
+    def pop_output(self):
+        output = self._output
+        self._output = []
+        return output
 
     def _ld(self, addr, mode=0):
         dbgprint(f"LD: addr={addr}, mode={mode}")

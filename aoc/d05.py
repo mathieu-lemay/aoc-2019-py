@@ -8,7 +8,7 @@ def get_diagnostic_code(program, system_id):
     r = IntCodeCPU(program)
     r.run((system_id,))
 
-    return r.pop_outputs()[-1]
+    return r.pop_output()[-1]
 
 
 def main():

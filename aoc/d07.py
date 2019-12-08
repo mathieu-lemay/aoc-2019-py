@@ -13,7 +13,7 @@ def get_thruster_output(program, phase_settings):
         inputs = (ps, outputs[0] if outputs else 0)
         runner = IntCodeCPU(program, ps)
         runner.run(inputs)
-        outputs = runner.pop_outputs()
+        outputs = runner.pop_output()
 
     return outputs[0]
 
@@ -23,7 +23,7 @@ def get_thruster_output_with_feedback(program, phase_settings):
     nb_runners = len(phase_settings)
     runners = [None] * nb_runners
 
-    outputs = []
+    output = []
 
     def _get_runner(n):
         r = runners[n]
@@ -37,9 +37,9 @@ def get_thruster_output_with_feedback(program, phase_settings):
         runner = _get_runner(cr % nb_runners)
 
         if cr < nb_runners:
-            inputs = (phase_settings[cr], outputs[0] if outputs else 0)
+            inputs = (phase_settings[cr], output[0] if output else 0)
         else:
-            inputs = outputs
+            inputs = output
 
         try:
             runner.run(inputs)
@@ -49,9 +49,9 @@ def get_thruster_output_with_feedback(program, phase_settings):
             print(e)
         else:
             if all(r.is_halted() for r in runners):
-                return runner.pop_outputs()[0]
+                return runner.pop_output()[0]
 
-        outputs = runner.pop_outputs()
+        output = runner.pop_output()
 
         cr += 1
 
