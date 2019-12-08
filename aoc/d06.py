@@ -2,6 +2,8 @@
 
 import unittest
 
+from aoc.utils import load_input_by_line
+
 
 def list_parents(m, k):
     p = m.get(k)
@@ -43,8 +45,7 @@ def get_number_of_transfers(input_):
 
 
 def main():
-    with open("input/d06.txt") as f:
-        x = [i.strip() for i in f.readlines()]
+    x = load_input_by_line("d06.txt")
 
     print(f"Part 1: {get_orbits(x)}")
     print(f"Part 1: {get_number_of_transfers(x)}")

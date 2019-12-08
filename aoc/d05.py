@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from aoc.intcode import IntCodeRunner
+from aoc.utils import load_input
 
 
 def get_diagnostic_code(program, system_id):
@@ -11,8 +12,7 @@ def get_diagnostic_code(program, system_id):
 
 
 def main():
-    with open("input/d05.txt") as f:
-        program = f.read()
+    program = load_input("d05.txt")
 
     print(f"Part 1: {get_diagnostic_code(program, 1)}")
     print(f"Part 2: {get_diagnostic_code(program, 5)}")

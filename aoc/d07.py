@@ -3,6 +3,7 @@
 import itertools
 
 from aoc.intcode import IntCodeRunner
+from aoc.utils import load_input
 
 
 def get_thruster_output(program, phase_settings):
@@ -56,8 +57,7 @@ def get_thruster_output_with_feedback(program, phase_settings):
 
 
 def main():
-    with open("input/d07.txt") as f:
-        program = f.read()
+    program = load_input("d07.txt")
 
     p1 = max(get_thruster_output(program, ps) for ps in itertools.permutations(range(5)))
     print(f"Part 1: {p1}")

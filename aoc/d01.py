@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import math
+from aoc.utils import load_input_by_line
 
 
 def get_fuel_req(weight):
@@ -16,8 +16,7 @@ def get_fuel_req_recur(weight):
 
 
 def main():
-    with open("/input/d01.txt") as f:
-        values = f.readlines()
+    values = load_input_by_line("d01.txt")
 
     sum_fuel = sum(get_fuel_req(int(l)) for l in values)
     sum_fuel_2 = sum(get_fuel_req_recur(int(l)) for l in values)

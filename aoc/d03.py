@@ -2,6 +2,8 @@
 
 import math
 
+from aoc.utils import load_input_by_line
+
 
 class WireTracer:
     def __init__(self, wires):
@@ -18,7 +20,8 @@ class WireTracer:
 
         self.crossing_pts -= {(0, 0)}
 
-    def _trace_wire(self, wire_movements):
+    @staticmethod
+    def _trace_wire(wire_movements):
         positions = []
         x, y = 0, 0
 
@@ -50,8 +53,7 @@ class WireTracer:
 
 
 def main():
-    with open("input/d03.txt") as f:
-        wires = [l.split(",") for l in f.readlines()]
+    wires = [l.split(",") for l in load_input_by_line("d03.txt")]
 
     wt = WireTracer(wires)
 
