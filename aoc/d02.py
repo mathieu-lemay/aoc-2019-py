@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from aoc.intcode import IntCodeRunner
+from aoc.intcode import IntCodeCPU
 from aoc.utils import load_input
 
 
@@ -11,8 +11,10 @@ def get_program_output(program, n=None, v=None):
     if v is not None:
         program[2] = v
 
-    icr = IntCodeRunner(program)
-    return icr.run()
+    icr = IntCodeCPU(program)
+    icr.run()
+
+    return icr.poke(0)
 
 
 def get_input_for_output(program, expected_output):

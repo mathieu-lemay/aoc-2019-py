@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
 import os
+from enum import IntEnum
+from typing import Iterator
 
 _debug = os.getenv("DEBUG", "") != ""
 
@@ -12,7 +14,19 @@ def dbgprint(*args, **kwargs):
     print(*args, **kwargs)
 
 
-class IntCodeRunner:
+class Op(IntEnum):
+    ADD = 1
+    MUL = 2
+    READ = 3
+    WRITE = 4
+    BNE = 5
+    BEQ = 6
+    LT = 7
+    EQ = 8
+    HALT = 99
+
+
+class IntCodeCPU:
     def __init__(self, program, id_=0):
         if isinstance(program, str):
             self._intcodes = [int(i) for i in program.split(",")]
@@ -20,119 +34,47 @@ class IntCodeRunner:
             self._intcodes = program
         self._id = id_
 
-        self._inputs = iter([])
+        self._inputs = []
         self._outputs = []
+
         self._ip = 0
+        self._modes = iter([])  # type: Iterator
         self._halt = False
 
     def run(self, inputs=None):
         self._inputs = iter(inputs or [])
 
         while not self._halt:
-            dbgprint(f"IP: ip: {self._ip}", end="")
-            op = self._next_op()
-            op, modes = self._decode_op(op)
-            dbgprint(f", op={op}, mode={modes}", end="")
-            modes = iter(modes)
+            op, modes = self._get_operation()
+            self._modes = iter(modes)
 
-            if op == 1:
-                in1 = self._next_op()
-                in2 = self._next_op()
-                out = self._next_op()
-                dbgprint(f", in1={in1}, in2={in2}, out={out}")
+            dbgprint(f"IP: ip: {self._ip}, op={op}, mode={modes}", end="")
 
-                v1 = self._ld(in1, next(modes, 0))
-                v2 = self._ld(in2, next(modes, 0))
-                self._st(out, v1 + v2)
-            elif op == 2:
-                in1 = self._next_op()
-                in2 = self._next_op()
-                out = self._next_op()
-                dbgprint(f", in1={in1}, in2={in2}, out={out}")
-
-                v1 = self._ld(in1, next(modes, 0))
-                v2 = self._ld(in2, next(modes, 0))
-                self._st(out, v1 * v2)
-            elif op == 3:
-                out = self._next_op()
-                dbgprint(f", out={out}")
-
-                self._read(out)
-            elif op == 4:
-                addr = self._next_op()
-                dbgprint(f", addr={addr}")
-
-                self._print(addr, next(modes, 0))
-            elif op == 5:
-                p1 = self._next_op()
-                p2 = self._next_op()
-                dbgprint(f", p1={p1}, p2={p2}")
-
-                v1 = self._ld(p1, next(modes, 0))
-                v2 = self._ld(p2, next(modes, 0))
-
-                if v1 != 0:
-                    self._ip = v2
-            elif op == 6:
-                p1 = self._next_op()
-                p2 = self._next_op()
-                dbgprint(f", p1={p1}, p2={p2}")
-
-                v1 = self._ld(p1, next(modes, 0))
-                v2 = self._ld(p2, next(modes, 0))
-
-                if v1 == 0:
-                    self._ip = v2
-            elif op == 7:
-                p1 = self._next_op()
-                p2 = self._next_op()
-                out = self._next_op()
-                dbgprint(f", p1={p1}, p2={p2}, out={out}")
-
-                v1 = self._ld(p1, next(modes, 0))
-                v2 = self._ld(p2, next(modes, 0))
-
-                if v1 < v2:
-                    self._st(out, 1)
-                else:
-                    self._st(out, 0)
-            elif op == 8:
-                p1 = self._next_op()
-                p2 = self._next_op()
-                out = self._next_op()
-                dbgprint(f", p1={p1}, p2={p2}, out={out}")
-
-                v1 = self._ld(p1, next(modes, 0))
-                v2 = self._ld(p2, next(modes, 0))
-
-                if v1 == v2:
-                    self._st(out, 1)
-                else:
-                    self._st(out, 0)
-            elif op == 99:
-                dbgprint(", exiting")
-                self._halt = True
+            if op == Op.ADD:
+                self.add()
+            elif op == Op.MUL:
+                self.mul()
+            elif op == Op.READ:
+                self.read()
+            elif op == Op.WRITE:
+                self.write()
+            elif op == Op.BNE:
+                self.bne()
+            elif op == Op.BEQ:
+                self.beq()
+            elif op == Op.LT:
+                self.lt()
+            elif op == Op.EQ:
+                self.eq()
+            elif op == Op.HALT:
+                self.halt()
             else:
                 dbgprint(", ERROR")
                 dbgprint(self._intcodes)
                 raise ValueError(f"Unsupported op: {op}")
 
-            dbgprint(f"MEM: {self._intcodes}")
-
-        return self._ld(0)
-
-    def pop_outputs(self):
-        outputs = self._outputs
-        self._outputs = []
-        return outputs
-
-    def _next_op(self):
+    def _get_operation(self):
         op = self._intcodes[self._ip]
-        self._ip += 1
-        return op
-
-    @staticmethod
-    def _decode_op(op):
         opcode = op % 100
         modes = []
 
@@ -143,6 +85,122 @@ class IntCodeRunner:
             op //= 10
 
         return opcode, modes
+
+    def add(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        out = self._intcodes[self._ip + 3]
+        dbgprint(f", p1={p1}, p2={p2}, out={out}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+        self._st(out, v1 + v2)
+
+        self._ip += 4
+
+    def mul(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        out = self._intcodes[self._ip + 3]
+        dbgprint(f", p1={p1}, p2={p2}, out={out}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+        self._st(out, v1 * v2)
+
+        self._ip += 4
+
+    def read(self):
+        out = self._intcodes[self._ip + 1]
+        dbgprint(f", out={out}")
+
+        v = next(self._inputs, None)
+        if v is None:
+            raise WaitingOnInput()
+
+        self._st(out, v)
+
+        self._ip += 2
+
+    def write(self):
+        p = self._intcodes[self._ip + 1]
+        dbgprint(f", p={p}")
+
+        v = self._ld(p, next(self._modes, 0))
+        self._outputs.append(v)
+
+        self._ip += 2
+
+    def bne(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        dbgprint(f", p1={p1}, p2={p2}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+
+        if v1 != 0:
+            self._ip = v2
+        else:
+            self._ip += 3
+
+    def beq(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        dbgprint(f", p1={p1}, p2={p2}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+
+        if v1 == 0:
+            self._ip = v2
+        else:
+            self._ip += 3
+
+    def lt(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        out = self._intcodes[self._ip + 3]
+        dbgprint(f", p1={p1}, p2={p2}, out={out}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+
+        if v1 < v2:
+            self._st(out, 1)
+        else:
+            self._st(out, 0)
+
+        self._ip += 4
+
+    def eq(self):
+        p1 = self._intcodes[self._ip + 1]
+        p2 = self._intcodes[self._ip + 2]
+        out = self._intcodes[self._ip + 3]
+        dbgprint(f", p1={p1}, p2={p2}, out={out}")
+
+        v1 = self._ld(p1, next(self._modes, 0))
+        v2 = self._ld(p2, next(self._modes, 0))
+
+        if v1 == v2:
+            self._st(out, 1)
+        else:
+            self._st(out, 0)
+
+        self._ip += 4
+
+    def halt(self):
+        dbgprint(", exiting")
+
+        self._halt = True
+
+    def poke(self, idx):
+        return self._intcodes[idx]
+
+    def pop_outputs(self):
+        outputs = self._outputs
+        self._outputs = []
+        return outputs
 
     def _ld(self, addr, mode=0):
         dbgprint(f"LD: addr={addr}, mode={mode}")
@@ -157,20 +215,9 @@ class IntCodeRunner:
         dbgprint(f"ST: addr={addr}, v={v}")
         self._intcodes[addr] = v
 
-    def _read(self, out):
-        v = next(self._inputs, None)
-        if v is None:
-            self._ip -= 2
-            raise self.WaitingOnInput()
-
-        self._st(out, v)
-
-    def _print(self, addr, mode):
-        v = self._ld(addr, mode)
-        self._outputs.append(v)
-
-    class WaitingOnInput(Exception):
-        pass
-
     def __repr__(self):
         return f"{type(self).__name__}<{self._id}>"
+
+
+class WaitingOnInput(Exception):
+    pass

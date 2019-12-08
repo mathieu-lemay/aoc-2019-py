@@ -2,7 +2,7 @@
 
 import itertools
 
-from aoc.intcode import IntCodeRunner
+from aoc.intcode import IntCodeCPU, WaitingOnInput
 from aoc.utils import load_input
 
 
@@ -11,7 +11,7 @@ def get_thruster_output(program, phase_settings):
 
     for ps in phase_settings:
         inputs = (ps, outputs[0] if outputs else 0)
-        runner = IntCodeRunner(program, ps)
+        runner = IntCodeCPU(program, ps)
         runner.run(inputs)
         outputs = runner.pop_outputs()
 
@@ -28,7 +28,7 @@ def get_thruster_output_with_feedback(program, phase_settings):
     def _get_runner(n):
         r = runners[n]
         if not r:
-            r = IntCodeRunner(program, n)
+            r = IntCodeCPU(program, n)
             runners[n] = r
 
         return r
@@ -43,7 +43,7 @@ def get_thruster_output_with_feedback(program, phase_settings):
 
         try:
             runner.run(inputs)
-        except IntCodeRunner.WaitingOnInput:
+        except WaitingOnInput:
             pass
         except Exception as e:
             print(e)

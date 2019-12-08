@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
-from aoc.intcode import IntCodeRunner
+from aoc.intcode import IntCodeCPU
 from aoc.utils import load_input
 
 
 def get_diagnostic_code(program, system_id):
-    r = IntCodeRunner(program)
+    r = IntCodeCPU(program)
     r.run((system_id,))
 
     return r.pop_outputs()[-1]
