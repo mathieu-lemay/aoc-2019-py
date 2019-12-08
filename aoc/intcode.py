@@ -2,7 +2,6 @@
 
 import os
 from enum import IntEnum
-from typing import Iterator
 
 _debug = os.getenv("DEBUG", "") != ""
 
@@ -38,13 +37,13 @@ class IntCodeCPU:
         self._outputs = []
 
         self._ip = 0
-        self._modes = iter([])  # type: Iterator
-        self._halt = False
+        self._modes = iter([])
+        self._halted = False
 
     def run(self, inputs=None):
         self._inputs = iter(inputs or [])
 
-        while not self._halt:
+        while not self._halted:
             op, modes = self._get_operation()
             self._modes = iter(modes)
 
@@ -86,10 +85,11 @@ class IntCodeCPU:
 
         return opcode, modes
 
+    def _get_op_params(self, n):
+        return self._intcodes[self._ip + 1 : self._ip + 1 + n]
+
     def add(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
-        out = self._intcodes[self._ip + 3]
+        p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -99,9 +99,7 @@ class IntCodeCPU:
         self._ip += 4
 
     def mul(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
-        out = self._intcodes[self._ip + 3]
+        p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -111,7 +109,7 @@ class IntCodeCPU:
         self._ip += 4
 
     def read(self):
-        out = self._intcodes[self._ip + 1]
+        (out,) = self._get_op_params(1)
         dbgprint(f", out={out}")
 
         v = next(self._inputs, None)
@@ -123,7 +121,7 @@ class IntCodeCPU:
         self._ip += 2
 
     def write(self):
-        p = self._intcodes[self._ip + 1]
+        (p,) = self._get_op_params(1)
         dbgprint(f", p={p}")
 
         v = self._ld(p, next(self._modes, 0))
@@ -132,8 +130,7 @@ class IntCodeCPU:
         self._ip += 2
 
     def bne(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
+        p1, p2 = self._get_op_params(2)
         dbgprint(f", p1={p1}, p2={p2}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -145,8 +142,7 @@ class IntCodeCPU:
             self._ip += 3
 
     def beq(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
+        p1, p2 = self._get_op_params(2)
         dbgprint(f", p1={p1}, p2={p2}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -158,9 +154,7 @@ class IntCodeCPU:
             self._ip += 3
 
     def lt(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
-        out = self._intcodes[self._ip + 3]
+        p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -174,9 +168,7 @@ class IntCodeCPU:
         self._ip += 4
 
     def eq(self):
-        p1 = self._intcodes[self._ip + 1]
-        p2 = self._intcodes[self._ip + 2]
-        out = self._intcodes[self._ip + 3]
+        p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
         v1 = self._ld(p1, next(self._modes, 0))
@@ -192,7 +184,7 @@ class IntCodeCPU:
     def halt(self):
         dbgprint(", exiting")
 
-        self._halt = True
+        self._halted = True
 
     def poke(self, idx):
         return self._intcodes[idx]

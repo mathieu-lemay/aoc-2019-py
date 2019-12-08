@@ -100,3 +100,29 @@ class IntCodeCPUTest(TestCase):
         cpu = IntCodeCPU(program)
         cpu.run()
         self.assertEqual(0, cpu.poke(7))
+
+    def test_unsupported_intcode(self):
+        program = [42]
+        cpu = IntCodeCPU(program)
+        with self.assertRaises(ValueError) as exc_ctx:
+            cpu.run()
+
+        self.assertEqual("Unsupported op: 42", str(exc_ctx.exception))
+
+    def test_ld_mode_0(self):
+        program = [0, 99]
+        cpu = IntCodeCPU(program)
+        self.assertEqual(99, cpu._ld(1, 0))
+
+    def test_ld_mode_1(self):
+        program = []
+        cpu = IntCodeCPU(program)
+        self.assertEqual(99, cpu._ld(99, 1))
+
+    def test_ld_invalid_mode(self):
+        program = []
+        cpu = IntCodeCPU(program)
+        with self.assertRaises(ValueError) as exc_ctx:
+            cpu._ld(0, 42)
+
+        self.assertEqual("Unsupported mode: 42", str(exc_ctx.exception))
