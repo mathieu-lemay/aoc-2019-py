@@ -22,7 +22,7 @@ class Op(IntEnum):
     BEQ = 6
     LT = 7
     EQ = 8
-    REL_OFFSET = 9
+    REL = 9
     HALT = 99
 
 
@@ -45,16 +45,16 @@ class IntCodeCPU:
         self._halted = False
 
         self._instr_map = {
-            Op.ADD: self.add,
-            Op.MUL: self.mul,
-            Op.READ: self.read,
-            Op.WRITE: self.write,
-            Op.BNE: self.bne,
-            Op.BEQ: self.beq,
-            Op.LT: self.lt,
-            Op.EQ: self.eq,
-            Op.REL_OFFSET: self.rel_off,
-            Op.HALT: self.halt,
+            Op.ADD: (self.add, 4),
+            Op.MUL: (self.mul, 4),
+            Op.READ: (self.read, 2),
+            Op.WRITE: (self.write, 2),
+            Op.BNE: (self.bne, 0),
+            Op.BEQ: (self.beq, 0),
+            Op.LT: (self.lt, 4),
+            Op.EQ: (self.eq, 4),
+            Op.REL: (self.rel, 2),
+            Op.HALT: (self.halt, 0),
         }
 
     def run(self, input_=None):
@@ -67,13 +67,14 @@ class IntCodeCPU:
             dbgprint(f"IP: ip: {self._ip}, instr={instr}, mode={modes}", end="")
 
             try:
-                op = self._instr_map[instr]
+                op, size = self._instr_map[instr]
             except KeyError:
                 dbgprint(", ERROR")
                 dbgprint(self._intcodes)
                 raise ValueError(f"Unsupported instr: {instr}")
 
             op()
+            self._ip += size
 
     def is_halted(self):
         return self._halted
@@ -102,8 +103,6 @@ class IntCodeCPU:
         v2 = self._ld(p2, next(self._modes, 0))
         self._st(out, v1 + v2, next(self._modes, 0))
 
-        self._ip += 4
-
     def mul(self):
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
@@ -111,8 +110,6 @@ class IntCodeCPU:
         v1 = self._ld(p1, next(self._modes, 0))
         v2 = self._ld(p2, next(self._modes, 0))
         self._st(out, v1 * v2, next(self._modes, 0))
-
-        self._ip += 4
 
     def read(self):
         (out,) = self._get_op_params(1)
@@ -124,16 +121,12 @@ class IntCodeCPU:
 
         self._st(out, v, next(self._modes, 0))
 
-        self._ip += 2
-
     def write(self):
         (p,) = self._get_op_params(1)
         dbgprint(f", p={p}")
 
         v = self._ld(p, next(self._modes, 0))
         self._output.append(v)
-
-        self._ip += 2
 
     def bne(self):
         p1, p2 = self._get_op_params(2)
@@ -171,8 +164,6 @@ class IntCodeCPU:
         else:
             self._st(out, 0, next(self._modes, 0))
 
-        self._ip += 4
-
     def eq(self):
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
@@ -185,17 +176,13 @@ class IntCodeCPU:
         else:
             self._st(out, 0, next(self._modes, 0))
 
-        self._ip += 4
-
-    def rel_off(self):
+    def rel(self):
         (p,) = self._get_op_params(1)
         dbgprint(f", p={p}")
 
         v = self._ld(p, next(self._modes, 0))
 
         self._rel_offset += v
-
-        self._ip += 2
 
     def halt(self):
         dbgprint(", exiting")
