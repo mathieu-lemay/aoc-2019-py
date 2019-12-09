@@ -41,7 +41,7 @@ class IntCodeCPU:
         self._ip = 0
         self._rel_offset = 0
         self._ram_size = len(self._intcodes)
-        self._modes = iter([])
+        self._modes = []
         self._halted = False
 
         self._instr_map = {
@@ -61,10 +61,9 @@ class IntCodeCPU:
         self._input = iter(input_ or [])
 
         while not self._halted:
-            instr, modes = self._get_instruction()
-            self._modes = iter(modes)
+            instr, self._modes = self._get_instruction()
 
-            dbgprint(f"IP: ip: {self._ip}, instr={instr}, mode={modes}", end="")
+            dbgprint(f"IP: ip: {self._ip}, instr={instr}, mode={self._modes}", end="")
 
             try:
                 op, size = self._instr_map[instr]
@@ -99,17 +98,17 @@ class IntCodeCPU:
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
-        self._st(out, v1 + v2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
+        self._st(out, v1 + v2)
 
     def mul(self):
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
-        self._st(out, v1 * v2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
+        self._st(out, v1 * v2)
 
     def read(self):
         (out,) = self._get_op_params(1)
@@ -119,21 +118,21 @@ class IntCodeCPU:
         if v is None:
             raise WaitingOnInput()
 
-        self._st(out, v, next(self._modes, 0))
+        self._st(out, v)
 
     def write(self):
         (p,) = self._get_op_params(1)
         dbgprint(f", p={p}")
 
-        v = self._ld(p, next(self._modes, 0))
+        v = self._ld(p)
         self._output.append(v)
 
     def bne(self):
         p1, p2 = self._get_op_params(2)
         dbgprint(f", p1={p1}, p2={p2}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
 
         if v1 != 0:
             self._ip = v2
@@ -144,8 +143,8 @@ class IntCodeCPU:
         p1, p2 = self._get_op_params(2)
         dbgprint(f", p1={p1}, p2={p2}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
 
         if v1 == 0:
             self._ip = v2
@@ -156,31 +155,31 @@ class IntCodeCPU:
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
 
         if v1 < v2:
-            self._st(out, 1, next(self._modes, 0))
+            self._st(out, 1)
         else:
-            self._st(out, 0, next(self._modes, 0))
+            self._st(out, 0)
 
     def eq(self):
         p1, p2, out = self._get_op_params(3)
         dbgprint(f", p1={p1}, p2={p2}, out={out}")
 
-        v1 = self._ld(p1, next(self._modes, 0))
-        v2 = self._ld(p2, next(self._modes, 0))
+        v1 = self._ld(p1)
+        v2 = self._ld(p2)
 
         if v1 == v2:
-            self._st(out, 1, next(self._modes, 0))
+            self._st(out, 1)
         else:
-            self._st(out, 0, next(self._modes, 0))
+            self._st(out, 0)
 
     def rel(self):
         (p,) = self._get_op_params(1)
         dbgprint(f", p={p}")
 
-        v = self._ld(p, next(self._modes, 0))
+        v = self._ld(p)
 
         self._rel_offset += v
 
@@ -197,7 +196,8 @@ class IntCodeCPU:
         self._output = []
         return output
 
-    def _ld(self, addr, mode):
+    def _ld(self, addr):
+        mode = self._pop_mode()
         dbgprint(f"LD: addr={addr}, mode={mode}")
         if mode == 0:
             return self._peek(addr)
@@ -208,7 +208,8 @@ class IntCodeCPU:
         else:
             raise ValueError(f"Unsupported mode: {mode}")
 
-    def _st(self, addr, v, mode):
+    def _st(self, addr, v):
+        mode = self._pop_mode()
         dbgprint(f"ST: addr={addr}, v={v}, mode={mode}")
         if mode == 0:
             return self._poke(addr, v)
@@ -216,6 +217,12 @@ class IntCodeCPU:
             return self._poke(addr + self._rel_offset, v)
         else:
             raise ValueError(f"Unsupported mode: {mode}")
+
+    def _pop_mode(self):
+        if self._modes:
+            return self._modes.pop(0)
+
+        return 0
 
     def _peek(self, addr):
         if addr >= self._ram_size:
