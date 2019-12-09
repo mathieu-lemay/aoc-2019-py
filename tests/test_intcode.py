@@ -12,7 +12,7 @@ class IntCodeCPUTest(TestCase):
 
         for op, expected in params:
             cpu = IntCodeCPU([op])
-            self.assertEqual(expected, cpu._get_operation())
+            self.assertEqual(expected, cpu._get_instruction())
 
     def test_add(self):
         program = [1, 5, 6, 7, 99, 5, 8, 0]
@@ -107,7 +107,7 @@ class IntCodeCPUTest(TestCase):
         with self.assertRaises(ValueError) as exc_ctx:
             cpu.run()
 
-        self.assertEqual("Unsupported op: 42", str(exc_ctx.exception))
+        self.assertEqual("Unsupported instr: 42", str(exc_ctx.exception))
 
     def test_ld_mode_0(self):
         program = [0, 99]

@@ -44,44 +44,41 @@ class IntCodeCPU:
         self._modes = iter([])
         self._halted = False
 
+        self._instr_map = {
+            Op.ADD: self.add,
+            Op.MUL: self.mul,
+            Op.READ: self.read,
+            Op.WRITE: self.write,
+            Op.BNE: self.bne,
+            Op.BEQ: self.beq,
+            Op.LT: self.lt,
+            Op.EQ: self.eq,
+            Op.REL_OFFSET: self.rel_off,
+            Op.HALT: self.halt,
+        }
+
     def run(self, input_=None):
         self._input = iter(input_ or [])
 
         while not self._halted:
-            op, modes = self._get_operation()
+            instr, modes = self._get_instruction()
             self._modes = iter(modes)
 
-            dbgprint(f"IP: ip: {self._ip}, op={op}, mode={modes}", end="")
+            dbgprint(f"IP: ip: {self._ip}, instr={instr}, mode={modes}", end="")
 
-            if op == Op.ADD:
-                self.add()
-            elif op == Op.MUL:
-                self.mul()
-            elif op == Op.READ:
-                self.read()
-            elif op == Op.WRITE:
-                self.write()
-            elif op == Op.BNE:
-                self.bne()
-            elif op == Op.BEQ:
-                self.beq()
-            elif op == Op.LT:
-                self.lt()
-            elif op == Op.EQ:
-                self.eq()
-            elif op == Op.REL_OFFSET:
-                self.rel_off()
-            elif op == Op.HALT:
-                self.halt()
-            else:
+            try:
+                op = self._instr_map[instr]
+            except KeyError:
                 dbgprint(", ERROR")
                 dbgprint(self._intcodes)
-                raise ValueError(f"Unsupported op: {op}")
+                raise ValueError(f"Unsupported instr: {instr}")
+
+            op()
 
     def is_halted(self):
         return self._halted
 
-    def _get_operation(self):
+    def _get_instruction(self):
         op = self._intcodes[self._ip]
         opcode = op % 100
         modes = []
