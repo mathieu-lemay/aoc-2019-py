@@ -22,6 +22,7 @@ class Op(IntEnum):
     BEQ = 6
     LT = 7
     EQ = 8
+    REL_OFFSET = 9
     HALT = 99
 
 
@@ -31,12 +32,15 @@ class IntCodeCPU:
             self._intcodes = [int(i) for i in program.split(",")]
         else:
             self._intcodes = program
+
         self._id = id_
 
         self._input = []
         self._output = []
 
         self._ip = 0
+        self._rel_offset = 0
+        self._ram_size = len(self._intcodes)
         self._modes = iter([])
         self._halted = False
 
@@ -65,6 +69,8 @@ class IntCodeCPU:
                 self.lt()
             elif op == Op.EQ:
                 self.eq()
+            elif op == Op.REL_OFFSET:
+                self.rel_off()
             elif op == Op.HALT:
                 self.halt()
             else:
@@ -97,7 +103,7 @@ class IntCodeCPU:
 
         v1 = self._ld(p1, next(self._modes, 0))
         v2 = self._ld(p2, next(self._modes, 0))
-        self._st(out, v1 + v2)
+        self._st(out, v1 + v2, next(self._modes, 0))
 
         self._ip += 4
 
@@ -107,7 +113,7 @@ class IntCodeCPU:
 
         v1 = self._ld(p1, next(self._modes, 0))
         v2 = self._ld(p2, next(self._modes, 0))
-        self._st(out, v1 * v2)
+        self._st(out, v1 * v2, next(self._modes, 0))
 
         self._ip += 4
 
@@ -119,7 +125,7 @@ class IntCodeCPU:
         if v is None:
             raise WaitingOnInput()
 
-        self._st(out, v)
+        self._st(out, v, next(self._modes, 0))
 
         self._ip += 2
 
@@ -164,9 +170,9 @@ class IntCodeCPU:
         v2 = self._ld(p2, next(self._modes, 0))
 
         if v1 < v2:
-            self._st(out, 1)
+            self._st(out, 1, next(self._modes, 0))
         else:
-            self._st(out, 0)
+            self._st(out, 0, next(self._modes, 0))
 
         self._ip += 4
 
@@ -178,11 +184,21 @@ class IntCodeCPU:
         v2 = self._ld(p2, next(self._modes, 0))
 
         if v1 == v2:
-            self._st(out, 1)
+            self._st(out, 1, next(self._modes, 0))
         else:
-            self._st(out, 0)
+            self._st(out, 0, next(self._modes, 0))
 
         self._ip += 4
+
+    def rel_off(self):
+        (p,) = self._get_op_params(1)
+        dbgprint(f", p={p}")
+
+        v = self._ld(p, next(self._modes, 0))
+
+        self._rel_offset += v
+
+        self._ip += 2
 
     def halt(self):
         dbgprint(", exiting")
@@ -197,18 +213,43 @@ class IntCodeCPU:
         self._output = []
         return output
 
-    def _ld(self, addr, mode=0):
+    def _ld(self, addr, mode):
         dbgprint(f"LD: addr={addr}, mode={mode}")
         if mode == 0:
-            return self._intcodes[addr]
+            return self._peek(addr)
         elif mode == 1:
             return addr
+        elif mode == 2:
+            return self._peek(addr + self._rel_offset)
         else:
             raise ValueError(f"Unsupported mode: {mode}")
 
-    def _st(self, addr, v):
-        dbgprint(f"ST: addr={addr}, v={v}")
+    def _st(self, addr, v, mode):
+        dbgprint(f"ST: addr={addr}, v={v}, mode={mode}")
+        if mode == 0:
+            return self._poke(addr, v)
+        elif mode == 2:
+            return self._poke(addr + self._rel_offset, v)
+        else:
+            raise ValueError(f"Unsupported mode: {mode}")
+
+    def _peek(self, addr):
+        if addr >= self._ram_size:
+            self._extend_ram_to(addr)
+
+        return self._intcodes[addr]
+
+    def _poke(self, addr, v):
+        if addr >= self._ram_size:
+            self._extend_ram_to(addr)
+
         self._intcodes[addr] = v
+
+    def _extend_ram_to(self, addr):
+        ram_needed = addr + 1 - self._ram_size
+
+        self._intcodes += [0] * ram_needed
+        self._ram_size += ram_needed
 
     def __repr__(self):
         return f"{type(self).__name__}<{self._id}>"

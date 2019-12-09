@@ -126,3 +126,26 @@ class IntCodeCPUTest(TestCase):
             cpu._ld(0, 42)
 
         self.assertEqual("Unsupported mode: 42", str(exc_ctx.exception))
+
+
+class IntCodeProgramsTest(TestCase):
+    def test_relative_mode_addressing(self):
+        program = [int(i) for i in "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99".split(",")]
+        cpu = IntCodeCPU(program[:])
+        cpu.run()
+
+        self.assertEqual(program, cpu.pop_output())
+
+    def test_big_numbers(self):
+        program = "1102,34915192,34915192,7,4,7,99,0"
+        cpu = IntCodeCPU(program)
+        cpu.run()
+
+        self.assertEqual([1219070632396864], cpu.pop_output())
+
+    def test_output_middle_number(self):
+        program = "104,1125899906842624,99"
+        cpu = IntCodeCPU(program[:])
+        cpu.run()
+
+        self.assertEqual([1125899906842624], cpu.pop_output())
