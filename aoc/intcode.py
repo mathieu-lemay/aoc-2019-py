@@ -212,9 +212,9 @@ class IntCodeCPU:
         mode = self._pop_mode()
         dbgprint(f"ST: addr={addr}, v={v}, mode={mode}")
         if mode == 0:
-            return self._poke(addr, v)
+            self._poke(addr, v)
         elif mode == 2:
-            return self._poke(addr + self._rel_offset, v)
+            self._poke(addr + self._rel_offset, v)
         else:
             raise ValueError(f"Unsupported mode: {mode}")
 
