@@ -6,6 +6,7 @@ authors = ["Mathieu Lemay <mathieu.lemay@broadsign.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
+numpy = "^1.17.4"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^1.18.3"
