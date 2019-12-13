@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from enum import IntEnum
 
-from aoc.intcode import IntCodeCPU, WaitingOnInput
+from aoc.intcode import IntCodeCPU, InterruptCode
 from aoc.utils import load_input
 
 
@@ -83,9 +83,8 @@ def run_robot(program, initial_coords, initial_color):
             p = Panel(*robot.position)
             panels[robot.position] = p
 
-        try:
-            cpu.run((p.color.value,))
-        except WaitingOnInput:
+        res = cpu.run((p.color.value,))
+        if res == InterruptCode.WAITING_ON_INPUT:
             c, td = cpu.pop_output()
             p.paint(Color(c))
             robot.turn(TurnDirection(td))

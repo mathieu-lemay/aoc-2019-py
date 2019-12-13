@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from aoc.intcode import IntCodeCPU, WaitingOnInput
+from aoc.intcode import IntCodeCPU, InterruptCode
 
 
 class IntCodeCPUTest(TestCase):
@@ -39,8 +39,8 @@ class IntCodeCPUTest(TestCase):
         program = [3, 3, 99, 0]
         cpu = IntCodeCPU(program)
 
-        with self.assertRaises(WaitingOnInput):
-            cpu.run()
+        res = cpu.run()
+        self.assertEqual(InterruptCode.WAITING_ON_INPUT, res)
 
         self.assertEqual(0, cpu._ip)
 

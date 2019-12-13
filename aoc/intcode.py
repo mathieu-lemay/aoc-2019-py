@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import os
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 _debug = os.getenv("DEBUG", "") != ""
 
@@ -72,8 +72,14 @@ class IntCodeCPU:
                 dbgprint(self._intcodes)
                 raise ValueError(f"Unsupported instr: {instr}")
 
-            op()
+            try:
+                op()
+            except Interrupt as i:
+                return i.code
+
             self._ip += size
+
+        return None
 
     def is_halted(self):
         return self._halted
@@ -116,7 +122,7 @@ class IntCodeCPU:
 
         v = next(self._input, None)
         if v is None:
-            raise WaitingOnInput()
+            raise Interrupt(InterruptCode.WAITING_ON_INPUT)
 
         self._st(out, v)
 
@@ -249,5 +255,10 @@ class IntCodeCPU:
         return f"{type(self).__name__}<{self._id}>"
 
 
-class WaitingOnInput(Exception):
-    pass
+class InterruptCode(Enum):
+    WAITING_ON_INPUT = 1
+
+
+class Interrupt(Exception):
+    def __init__(self, code):
+        self.code = code
