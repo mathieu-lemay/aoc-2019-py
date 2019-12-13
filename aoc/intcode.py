@@ -188,8 +188,11 @@ class IntCodeCPU:
 
         self._halted = True
 
-    def poke(self, idx):
+    def peek(self, idx):
         return self._intcodes[idx]
+
+    def poke(self, idx, v):
+        self._intcodes[idx] = v
 
     def pop_output(self):
         output = self._output

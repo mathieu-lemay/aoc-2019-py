@@ -1,7 +1,7 @@
 .PHONY: unittests coverage deps clean
 
-unittests:
-	python -m unittest discover tests
+unittests: deps
+	poetry run python -m unittest discover tests
 
 coverage: deps
 	poetry run coverage run -m unittest discover tests

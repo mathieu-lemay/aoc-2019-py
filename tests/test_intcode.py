@@ -19,21 +19,21 @@ class IntCodeCPUTest(TestCase):
         cpu = IntCodeCPU(program)
         cpu.run()
 
-        self.assertEqual(13, cpu.poke(7))
+        self.assertEqual(13, cpu.peek(7))
 
     def test_mul(self):
         program = [2, 5, 6, 7, 99, 5, 8, 0]
         cpu = IntCodeCPU(program)
         cpu.run()
 
-        self.assertEqual(40, cpu.poke(7))
+        self.assertEqual(40, cpu.peek(7))
 
     def test_read_with_input(self):
         program = [3, 3, 99, 0]
         cpu = IntCodeCPU(program)
         cpu.run((42,))
 
-        self.assertEqual(42, cpu.poke(3))
+        self.assertEqual(42, cpu.peek(3))
 
     def test_read_no_input(self):
         program = [3, 3, 99, 0]
@@ -81,25 +81,25 @@ class IntCodeCPUTest(TestCase):
         program = [7, 5, 6, 7, 99, 5, 8, 42]
         cpu = IntCodeCPU(program)
         cpu.run()
-        self.assertEqual(1, cpu.poke(7))
+        self.assertEqual(1, cpu.peek(7))
 
     def test_lt_is_not_lower(self):
         program = [7, 5, 6, 7, 99, 8, 5, 42]
         cpu = IntCodeCPU(program)
         cpu.run()
-        self.assertEqual(0, cpu.poke(7))
+        self.assertEqual(0, cpu.peek(7))
 
     def test_eq_is_equal(self):
         program = [8, 5, 6, 7, 99, 5, 5, 42]
         cpu = IntCodeCPU(program)
         cpu.run()
-        self.assertEqual(1, cpu.poke(7))
+        self.assertEqual(1, cpu.peek(7))
 
     def test_eq_is_not_equal(self):
         program = [8, 5, 6, 7, 99, 8, 5, 42]
         cpu = IntCodeCPU(program)
         cpu.run()
-        self.assertEqual(0, cpu.poke(7))
+        self.assertEqual(0, cpu.peek(7))
 
     def test_unsupported_intcode(self):
         program = [42]

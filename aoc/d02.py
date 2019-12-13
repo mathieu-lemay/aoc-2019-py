@@ -14,7 +14,7 @@ def get_program_output(program, n=None, v=None):
     icr = IntCodeCPU(program)
     icr.run()
 
-    return icr.poke(0)
+    return icr.peek(0)
 
 
 def get_input_for_output(program, expected_output):
