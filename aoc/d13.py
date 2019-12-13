@@ -37,10 +37,10 @@ class Pixel:
 class GameState:
     _char_map = {
         Tile.EMPTY: " ",
-        Tile.WALL: "X",
-        Tile.BLOCK: "#",
-        Tile.PADDLE: "_",
-        Tile.BALL: "O",
+        Tile.WALL: "█",
+        Tile.BLOCK: "\033[31m□\033[0m",
+        Tile.PADDLE: "▬",
+        Tile.BALL: "●",
     }
 
     def __init__(self, w, h):
@@ -120,7 +120,7 @@ class GameState:
 
     def render(self):
         print("\033[0;0H")
-        print(f"Frame: {self._frame}, Score: {self._score}")
+        print(f"Frame: {self._frame}, Score: \033[32m{self._score}\033[0m")
         for y in range(self.h):
             line = "".join(self._char_map[self.get(x, y)] for x in range(self.w))
             print(line)
